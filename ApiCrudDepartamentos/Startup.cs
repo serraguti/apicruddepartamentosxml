@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,15 @@ namespace ApiCrudDepartamentos
             services.AddTransient<RepositoryDepartamentos>();
             services.AddDbContext<DepartamentosContext>
                 (options => options.UseSqlServer(cadena));
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc(name: "v1", new OpenApiInfo
+                {
+                    Title = "Api Crud Departamentos Core",
+                    Version = "v1",
+                    Description = "Api Crud departamentos 2021"
+                });
+            });
             services.AddControllers();
         }
 
@@ -41,7 +51,13 @@ namespace ApiCrudDepartamentos
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint(
+                    url: "/swagger/v1/swagger.json", name: "Api v1");
+                options.RoutePrefix = "";
+            });
             app.UseHttpsRedirection();
 
             app.UseRouting();
