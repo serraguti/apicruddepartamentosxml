@@ -1,16 +1,23 @@
-﻿using ApiCrudDepartamentos.Models;
+﻿using ApiCrudDepartamentos.Helpers;
+using ApiCrudDepartamentos.Models;
 using ApiCrudDepartamentos.Repositories;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace ApiCrudDepartamentos.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("MyPolicy")]
     public class DepartamentosController : ControllerBase
     {
         RepositoryDepartamentos repo;
@@ -21,16 +28,34 @@ namespace ApiCrudDepartamentos.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<Departamento>> GetDepartamentos()
+        public ActionResult<string> GetDepartamentos()
         {
-            return this.repo.GetDepartamentos();
+            List<Departamento> lista = this.repo.GetDepartamentos();
+            String salida = 
+            HelperSerializacion.Serialize<List<Departamento>>(lista);
+            return salida;
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Departamento> BuscarDepartamento(int id)
+        public ActionResult<string> BuscarDepartamento(int id)
         {
-            return this.repo.BuscarDepartamento(id);
+            Departamento dept = this.repo.BuscarDepartamento(id);
+            String salida =
+            HelperSerializacion.Serialize<Departamento>(dept);
+            return salida;
         }
+
+        //[HttpGet]
+        //public ActionResult<List<Departamento>> GetDepartamentos()
+        //{
+        //    return this.repo.GetDepartamentos();
+        //}
+
+        //[HttpGet("{id}")]
+        //public ActionResult<Departamento> BuscarDepartamento(int id)
+        //{
+        //    return this.repo.BuscarDepartamento(id);
+        //}
 
         //EN LAS CONSULTAS DE ACCION SOLAMENTE TENDREMOS
         //(POR DEFECTO) UN METODO POST, PUT Y DELETE
@@ -49,26 +74,61 @@ namespace ApiCrudDepartamentos.Controllers
         //[Route("{id}/{nombre}/{localidad}"]
         //POST api/[controller]/99/I+D/GIJON
         //POST api/[controller]
+        //[HttpPost]
+        //public void InsertarDepartamento(Departamento departamento)
+        //{
+        //    this.repo.InsertarDepartamento(departamento.IdDepartamento
+        //        , departamento.Nombre, departamento.Localidad);
+        //}
+
         [HttpPost]
-        public void InsertarDepartamento(Departamento departamento)
+        public IActionResult InsertarDepartamentoXML
+            ([FromBody] XElement request)
         {
-            this.repo.InsertarDepartamento(departamento.IdDepartamento
-                , departamento.Nombre, departamento.Localidad);
+            XmlSerializer serializer = new XmlSerializer(typeof(Departamento));
+            using (TextReader reader = new StringReader(request.ToString()))
+            {
+                Departamento result = 
+                    (Departamento)serializer.Deserialize(reader);
+                this.repo.InsertarDepartamento(result.IdDepartamento
+                                , result.Nombre, result.Localidad);
+            }
+            //return Ok();
+            return StatusCode(StatusCodes.Status200OK,
+                    "Todo OK Jose Luis");
         }
 
         //PUT api/[controller]
+        //[HttpPut]
+        //public void ModificarDepartamento(Departamento departamento)
+        //{
+        //    this.repo.ModificarDepartamento(departamento.IdDepartamento
+        //        , departamento.Nombre, departamento.Localidad);
+        //}
+
+
         [HttpPut]
-        public void ModificarDepartamento(Departamento departamento)
+        public IActionResult ModificarDepartamento([FromBody] XElement request)
         {
-            this.repo.ModificarDepartamento(departamento.IdDepartamento
-                , departamento.Nombre, departamento.Localidad);
+            XmlSerializer serializer = new XmlSerializer(typeof(Departamento));
+            using (TextReader reader = new StringReader(request.ToString()))
+            {
+                Departamento result =
+                    (Departamento)serializer.Deserialize(reader);
+                this.repo.ModificarDepartamento(result.IdDepartamento
+                                , result.Nombre, result.Localidad);
+            }
+            return StatusCode(StatusCodes.Status200OK,
+                    "Todo OK Jose Luis");
         }
 
         //DELETE api/[controller]/{id}
         [HttpDelete("{id}")]
-        public void EliminarDepartamento(int id)
+        public IActionResult EliminarDepartamento(int id)
         {
             this.repo.EliminarDepartamento(id);
+            return StatusCode(StatusCodes.Status200OK,
+                    "Todo OK Jose Luis");
         }
     }
 }

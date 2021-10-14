@@ -43,6 +43,25 @@ namespace ApiCrudDepartamentos
                 });
             });
             services.AddControllers();
+            //services.AddCors(c =>
+            //{
+            //    c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin());
+            //});
+            services.AddCors(
+                o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
+
+
+            services.AddMvc().AddXmlDataContractSerializerFormatters();
+            //services.Configure<MvcOptions>(options =>
+            //{
+            //    options.Filters.Add(new 
+            //        CorsAuthorizationFilterFactory("MyPolicy"));
+            //});
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -61,7 +80,7 @@ namespace ApiCrudDepartamentos
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseCors("MyPolicy");
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
